@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>To-Do List</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      padding: 60px 20px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 36px;
+      width: 460px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    h1 { font-size: 22px; margin-bottom: 20px; color: #111; }
+
+    .row { display: flex; gap: 8px; margin-bottom: 12px; }
+
+    input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    input:focus { border-color: #888; }
+
+    button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .btn-add { background: #111; color: #fff; }
+    .btn-remove { width: 100%; background: #fff; color: #e05555; border: 1px solid #e05555; margin-bottom: 20px; }
+    .btn-remove:hover { background: #e05555; color: #fff; }
+
+    ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+
+    li {
+      padding: 12px 16px;
+      background: #f9f9f9;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      color: #333;
+    }
+
+    li.selected { border-color: #e05555; background: #fff5f5; color: #111; }
+
+    .empty { text-align: center; font-size: 13px; color: #aaa; padding: 24px 0; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>To-Do List</h1>
+
+    <div class="row">
+      <input type="text" id="taskInput" placeholder="What needs to be done?">
+      <button class="btn-add" onclick="addTask()">Add Task</button>
+    </div>
+
+    <button class="btn-remove" onclick="removeTask()">Remove Task</button>
+
+    <ul id="taskList"></ul>
+    <p class="empty" id="emptyMsg">No tasks yet.</p>
+  </div>
+
+  <script>
+    var selected = null;
+
+    function addTask() {
+      var input = document.getElementById("taskInput");
+      if (input.value.trim() == "") { alert("Please enter a task!"); return; }
+
+      document.getElementById("emptyMsg").style.display = "none";
+
+      var li = document.createElement("li");
+      li.textContent = input.value.trim();
+      li.onclick = function() {
+        if (selected) selected.classList.remove("selected");
+        selected = (selected === li) ? null : li;
+        if (selected) selected.classList.add("selected");
+      };
+
+      document.getElementById("taskList").appendChild(li);
+      input.value = "";
+    }
+
+    function removeTask() {
+      if (!selected) { alert("Please select a task to remove!"); return; }
+      selected.remove();
+      selected = null;
+      if (!document.getElementById("taskList").children.length)
+        document.getElementById("emptyMsg").style.display = "block";
+    }
+  </script>
+</body>
+</html>

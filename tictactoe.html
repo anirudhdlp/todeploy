@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tic-Tac-Toe</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      text-align: center;
+      width: 380px;
+    }
+
+    h1 {
+      font-size: 26px;
+      margin-bottom: 6px;
+      color: #222;
+    }
+
+    h1 span { color: #e74c3c; }
+    .settings {
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .setting-group {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      font-size: 13px;
+      color: #555;
+    }
+
+    .setting-group label { margin-bottom: 4px; font-weight: bold; }
+
+    .setting-group select,
+    .setting-group input {
+      padding: 6px 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+      width: 110px;
+    }
+    .scoreboard {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .score-box {
+      background: #f8f8f8;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 10px 18px;
+      min-width: 80px;
+    }
+
+    .score-box .label { font-size: 12px; color: #888; margin-bottom: 3px; }
+    .score-box .val   { font-size: 22px; font-weight: bold; color: #222; }
+    .score-box.x-box .val { color: #e74c3c; }
+    .score-box.o-box .val { color: #2980b9; }
+    #status {
+      font-size: 15px;
+      font-weight: bold;
+      margin-bottom: 16px;
+      color: #333;
+      min-height: 22px;
+    }
+    #board {
+      display: grid;
+      gap: 6px;
+      margin: 0 auto 20px;
+      width: fit-content;
+    }
+
+    .cell {
+      width: 90px;
+      height: 90px;
+      background: #f4f4f4;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 36px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+      user-select: none;
+    }
+
+    .cell:hover:not(.taken) { background: #e8e8e8; }
+    .cell.x { color: #e74c3c; }
+    .cell.o { color: #2980b9; }
+    .cell.win { background: #fff3cd; border-color: #f0a500; }
+    .buttons { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+
+    button {
+      padding: 9px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-reset {
+      background-color: #e74c3c;
+      color: white;
+    }
+
+    .btn-reset:hover { background-color: #c0392b; }
+
+    .btn-clear {
+      background-color: #95a5a6;
+      color: white;
+    }
+
+    .btn-clear:hover { background-color: #7f8c8d; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Tic-<span>Tac</span>-Toe</h1>
+  <div class="settings">
+    <div class="setting-group">
+      <label>Board Size</label>
+      <select id="boardSize" onchange="initGame()">
+        <option value="3">3 × 3</option>
+        <option value="4">4 × 4</option>
+        <option value="5">5 × 5</option>
+      </select>
+    </div>
+    <div class="setting-group">
+      <label>Player X Symbol</label>
+      <input type="text" id="symX" value="✕" maxlength="2" oninput="initGame()"/>
+    </div>
+    <div class="setting-group">
+      <label>Player O Symbol</label>
+      <input type="text" id="symO" value="○" maxlength="2" oninput="initGame()"/>
+    </div>
+  </div>
+  <div class="scoreboard">
+    <div class="score-box x-box">
+      <div class="label">Player X</div>
+      <div class="val" id="scoreX">0</div>
+    </div>
+    <div class="score-box">
+      <div class="label">Draws</div>
+      <div class="val" id="scoreDraw">0</div>
+    </div>
+    <div class="score-box o-box">
+      <div class="label">Player O</div>
+      <div class="val" id="scoreO">0</div>
+    </div>
+  </div>
+  <div id="status">Player X's turn</div>
+  <div id="board"></div>
+  <div class="buttons">
+    <button class="btn-reset" onclick="initGame()">🔄 New Game</button>
+    <button class="btn-clear" onclick="clearScores()">🗑 Clear Scores</button>
+  </div>
+</div>
+
+<script>
+  let size, board, currentPlayer, gameOver;
+  let scores = { X: 0, O: 0, Draw: 0 };
+
+  function getSymbols() {
+    const x = document.getElementById('symX').value.trim() || '✕';
+    const o = document.getElementById('symO').value.trim() || '○';
+    return { X: x, O: o };
+  }
+
+  function initGame() {
+    size        = parseInt(document.getElementById('boardSize').value);
+    board       = Array(size * size).fill(null);
+    currentPlayer = 'X';
+    gameOver    = false;
+
+    const sym = getSymbols();
+    setStatus(`Player X (${sym.X}) starts!`);
+    renderBoard();
+  }
+
+  function renderBoard() {
+    const el = document.getElementById('board');
+    const cellSize = size === 3 ? 90 : size === 4 ? 72 : 58;
+    const fontSize = size === 3 ? 36 : size === 4 ? 28 : 22;
+
+    el.style.gridTemplateColumns = `repeat(${size}, ${cellSize}px)`;
+    el.innerHTML = '';
+
+    board.forEach((val, i) => {
+      const cell = document.createElement('div');
+      cell.className = 'cell' + (val ? ' taken ' + val.toLowerCase() : '');
+      cell.style.width     = cellSize + 'px';
+      cell.style.height    = cellSize + 'px';
+      cell.style.fontSize  = fontSize + 'px';
+      cell.dataset.index   = i;
+
+      const sym = getSymbols();
+      cell.textContent = val ? sym[val] : '';
+
+      cell.addEventListener('click', () => handleClick(i));
+      el.appendChild(cell);
+    });
+  }
+
+  function handleClick(i) {
+    if (gameOver || board[i]) return;
+
+    board[i] = currentPlayer;
+    renderBoard();
+
+    const winLine = checkWinner();
+    const sym     = getSymbols();
+
+    if (winLine) {
+      highlightWin(winLine);
+      setStatus(`🎉 Player ${currentPlayer} (${sym[currentPlayer]}) wins!`);
+      scores[currentPlayer]++;
+      updateScores();
+      gameOver = true;
+      return;
+    }
+
+    if (board.every(c => c)) {
+      setStatus("🤝 It's a draw!");
+      scores.Draw++;
+      updateScores();
+      gameOver = true;
+      return;
+    }
+
+    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+    const next = currentPlayer;
+    setStatus(`Player ${next} (${sym[next]})'s turn`);
+  }
+  function checkWinner() {
+    const wins = [];
+    for (let r = 0; r < size; r++) {
+      const row = [];
+      for (let c = 0; c < size; c++) row.push(r * size + c);
+      wins.push(row);
+    }
+    for (let c = 0; c < size; c++) {
+      const col = [];
+      for (let r = 0; r < size; r++) col.push(r * size + c);
+      wins.push(col);
+    }
+    const d1 = [], d2 = [];
+    for (let i = 0; i < size; i++) {
+      d1.push(i * size + i);
+      d2.push(i * size + (size - 1 - i));
+    }
+    wins.push(d1, d2);
+
+    for (const line of wins) {
+      const first = board[line[0]];
+      if (first && line.every(i => board[i] === first)) return line;
+    }
+    return null;
+  }
+
+  function highlightWin(line) {
+    const cells = document.querySelectorAll('.cell');
+    line.forEach(i => cells[i].classList.add('win'));
+  }
+
+  function setStatus(msg) {
+    document.getElementById('status').textContent = msg;
+  }
+
+  function updateScores() {
+    document.getElementById('scoreX').textContent    = scores.X;
+    document.getElementById('scoreO').textContent    = scores.O;
+    document.getElementById('scoreDraw').textContent = scores.Draw;
+  }
+
+  function clearScores() {
+    scores = { X: 0, O: 0, Draw: 0 };
+    updateScores();
+    initGame();
+  }
+  initGame();
+</script>
+</body>
+</html>
